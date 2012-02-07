@@ -1,0 +1,134 @@
+/*****************************************************************************
+ * Common
+ *****************************************************************************/
+td.number {
+  text-align: right;
+}
+
+/*****************************************************************************
+ * Result Table
+ *****************************************************************************/
+table.resulttable {
+  margin-left: 8em;
+  vertical-align: top;
+  text-align: left;
+  padding: 0.5em;
+}
+
+table.resulttable > tbody > tr:nth-child(1) > td,
+table.resulttable > tbody > tr:nth-child(1) > th {
+  border-top: 1px solid black;
+}
+
+table.resulttable .resulttable-key,
+table.resulttable .resulttable-value {
+  padding: 0.5em;
+  border-bottom: 1px solid black;
+}
+
+table.resulttable .resulttable-key {
+  vertical-align: top;
+  padding-left: 1em;
+}
+
+table.resulttable .resulttable-value {
+  vertical-align: top;
+  padding-right: 1em;
+}
+
+/*****************************************************************************
+ * IHDR Chunk Table
+ *****************************************************************************/
+table.resulttable table.ihdr {
+  width: 100%;
+}
+
+table.resulttable table.ihdr ,
+table.resulttable table.ihdr th {
+  border-style: none;
+}
+
+table.resulttable table.ihdr tr:nth-child(even) {
+  background-color: #f0f0f0;
+}
+
+table.resulttable table.ihdr tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table.chunks {
+  width: 100%;
+}
+
+table.chunks td,
+table.chunks th {
+  vertical-align: top;
+}
+
+table.chunks td,
+table.chunks th {
+  border-bottom: 1px solid black;
+}
+
+table.chunks .chunkinfo {
+  width: 100%;
+}
+
+table.chunks .chunkinfo tr:nth-child(even) {
+  background-color: #ffffff;
+}
+
+table.chunks .chunkinfo tr:nth-child(odd) {
+  background-color: #f0f0f0;
+}
+
+table.chunks .chunkinfo td,
+table.chunks .chunkinfo th {
+  border: none;
+}
+
+/*****************************************************************************
+ * Byte Array Table
+ *****************************************************************************/
+table.hextable {
+  margin: 0px;
+  font-family: monospace;
+}
+
+table.hextable thead td,
+table.hextable thead th {
+  border-bottom: 1px solid black;
+}
+
+table.hextable tbody tr:nth-child(even) {
+  background-color: #f0f0f0;
+}
+
+table.hextable tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table.hextable .hextable-address {
+  padding-right: 1em;
+}
+
+table.filtercount td,
+table.filtercount th {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+table.filtercount thead td,
+table.filtercount thead th {
+  border-bottom: 1px solid black;
+}
+
+table.filtercount tbody tr:nth-child(even) {
+  background-color: #f0f0f0;
+}
+
+table.filtercount tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+/* vim:set expandtab ts=2 sw=2: */
