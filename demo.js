@@ -14,7 +14,8 @@ function setDragAndDropEvent() {
       var data = new Uint8Array(reader.result),
           png,
           identify,
-          result = document.getElementById('result');
+          result = document.getElementById('result'),
+          option = {};
 
       // empty
       while (result.hasChildNodes()) { result.removeChild(result.firstChild);  }
@@ -27,7 +28,11 @@ function setDragAndDropEvent() {
       png = new PNG(data);
       identify = new PngIdentify(png);
 
-      identify.appendToElement(result, undefined, undefined, {Filename: file.fileName});
+      // filename
+      if (file.fileName) { option['Filename'] = file.filename; } // Chrome
+      if (file.name)     { option['Filename'] = file.name;     } // Firefox
+
+      identify.appendToElement(result, undefined, undefined, option);
     };
 
     reader.readAsArrayBuffer(file);
