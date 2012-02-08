@@ -585,8 +585,9 @@ PngIdentify.prototype.createFilterCount_ = function(cssPrefix, className) {
 PngIdentify.prototype.createBlockInfo_ = function(cssPrefix, className) {
   var table, head, body, row, col,
       block,
-      labels = ['#', 'Plain', 'Compressed', 'Ratio'],
-      i, l, j, m;
+      labels = ['Index', 'Plain', 'Compressed', 'Ratio'],
+      i, l, j, m,
+      plainTotal = 0, compressedTotal = 0;
 
   if (className === undefined) { className = 'blocks'; }
 
@@ -605,6 +606,24 @@ PngIdentify.prototype.createBlockInfo_ = function(cssPrefix, className) {
     col.textContent = labels[i];
   }
 
+  // row
+  function appendRow(rowData) {
+    var i, l;
+
+    row = document.createElement('tr');
+    body.appendChild(row);
+
+    for (i = 0, l = rowData.length; i < l; i++) {
+      col = document.createElement('td');
+      row.appendChild(col);
+      col.textContent = rowData[i];
+      col.className = [
+        col.className,
+        makeCssClassName_([cssPrefix, 'number'])
+      ].join(' ');
+    }
+  }
+
   // body
   body = document.createElement('tbody');
   table.appendChild(body);
@@ -613,19 +632,14 @@ PngIdentify.prototype.createBlockInfo_ = function(cssPrefix, className) {
     ratio = (((block.compressed / block.plain) * 10000 + 0.5) >>> 0) / 100;
     tmp = [i, block.plain, block.compressed, ratio + ' %'];
 
-    row = document.createElement('tr');
-    body.appendChild(row);
+    plainTotal += block.plain;
+    compressedTotal += block.compressed;
 
-    for (j = 0, m = tmp.length; j < m; j++) {
-      col = document.createElement('td');
-      row.appendChild(col);
-      col.textContent = tmp[j];
-      col.className = [
-        col.className,
-        makeCssClassName_([cssPrefix, 'number'])
-      ].join(' ');
-    }
+    appendRow(tmp);
   }
+
+  ratio = (((compressedTotal / plainTotal) * 10000 + 0.5) >>> 0) / 100;
+  appendRow(['Total', plainTotal, compressedTotal, ratio + ' %']);
 
   return table;
 };
