@@ -331,12 +331,16 @@ function(element, cssPrefix, className, opt_param) {
         new KeyValue('Width', this.png.width),
         new KeyValue('Height', this.png.height),
         new KeyValue('BitDepth', this.png.bits),
-        new KeyValue('ColourType', rc.ColourType[this.png.colorType]),
+        new KeyValue('ColourType', rc.ColourType[this.png.colorType] +
+          ' (' + this.png.colorType + ')'),
         new KeyValue('CompressionMethod',
-          rc.CompressionMethod[this.png.compressionMethod]),
-        new KeyValue('FilterMethod', rc.FilterMethod[this.png.filterMethod]),
+          rc.CompressionMethod[this.png.compressionMethod] + 
+          ' (' + this.png.compressionMethod + ')'),
+        new KeyValue('FilterMethod', rc.FilterMethod[this.png.filterMethod] +
+          ' (' + this.png.filterMethod + ')'),
         new KeyValue('InterlaceMethod',
-          rc.InterlaceMethod[this.png.interlaceMethod])
+          rc.InterlaceMethod[this.png.interlaceMethod] +
+          ' (' + this.png.interlaceMethod + ')')
       ], cssPrefix, 'ihdr')
     )
   );
