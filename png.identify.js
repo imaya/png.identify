@@ -712,7 +712,7 @@ function createTableFromByteArray_(array, cssPrefix, className) {
       head = document.createElement('thead'),
       body = document.createElement('tbody'),
       row, col, x, pos,
-      hex = '0123456689ABCDEF';
+      hex = '0123456789ABCDEF';
 
   if (className === undefined) { className = 'hextable'; }
 
