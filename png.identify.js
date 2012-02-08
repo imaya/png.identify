@@ -38,8 +38,12 @@ global[globalName] = PngIdentify;
  */
 function PngIdentify(png, cssPrefix) {
   this.png = png;
-  this.extendsPNG();
   this.cssPrefix = cssPrefix;
+  this.blockInfo = [];
+
+  // extends png.js and zlib.js
+  this.extendsPNG();
+  this.extendsInflate();
 }
 
 /**
@@ -141,6 +145,40 @@ PngIdentify.prototype.extendsPNG = function() {
   }
 };
 
+/**
+ * Extends FlateStream object.
+ */
+PngIdentify.prototype.extendsInflate = function() {
+  var that = this;
+
+  //
+  // CAUTION: this method replace original readBlock method !!
+  //
+  FlateStream.pngIdentify = this; // current PngIdentify object only
+  if (FlateStream.prototype.readBlock__ === undefined) {
+    FlateStream.prototype.readBlock__ = FlateStream.prototype.readBlock;
+    FlateStream.prototype.readBlock = function() {
+      var currentPos = this.bytesPos,
+          currentBufLen = this.bufferLength;
+
+      // call original method
+      this.readBlock__();
+
+      FlateStream.pngIdentify.handleFlateStreamReadBlock({
+        plain: this.bufferLength - currentBufLen,
+        compressed: this.bytesPos - currentPos
+      });
+    };
+  }
+};
+
+/**
+ * readBlock callback function
+ * @param {!{plain: number, compressed: <number>}} obj block information.
+ */
+PngIdentify.prototype.handleFlateStreamReadBlock = function(obj) {
+  this.blockInfo.push(obj);
+};
 
 /**
  * PNG Signature
@@ -342,6 +380,13 @@ function(element, cssPrefix, className, opt_param) {
     );
   }
 
+  // decompression information
+  if (this.blockInfo.length > 0) {
+    result.push(
+      new KeyValue('ZLIB Blocks', this.createBlockInfo_(cssPrefix, 'blocks'))
+    );
+  }
+
   // append
   element.appendChild(
     createTableFromKeyValueArray_(result, cssPrefix, className)
@@ -397,6 +442,15 @@ PngIdentify.prototype.updateFilterInfo = function() {
     this.filterCount = filterCount;
   }
 };
+
+/**
+ * update pixel information (optional).
+ */
+PngIdentify.prototype.updatePixelInfo = function() {
+  this.blockInfo = [];
+  this.pixels = this.png.decodePixels();
+};
+
 
 /**
  * create palette table.
@@ -515,6 +569,61 @@ PngIdentify.prototype.createFilterCount_ = function(cssPrefix, className) {
           makeCssClassName_([cssPrefix, 'number'])
         ].join(' ');
       }
+    }
+  }
+
+  return table;
+};
+
+/**
+ * create zlib block information table.
+ * @param {string=} cssPrefix css class name prefix.
+ * @param {string=} className css class name.
+ * @return {!Element} table element.
+ * @private
+ */
+PngIdentify.prototype.createBlockInfo_ = function(cssPrefix, className) {
+  var table, head, body, row, col,
+      block,
+      labels = ['#', 'Plain', 'Compressed', 'Ratio'],
+      i, l, j, m;
+
+  if (className === undefined) { className = 'blocks'; }
+
+  // table
+  table = document.createElement('table');
+  table.className = makeCssClassName_([cssPrefix, className]);
+
+  // head
+  head = document.createElement('thead');
+  table.appendChild(head);
+  row = document.createElement('tr');
+  head.appendChild(row);
+  for (i = 0, l = labels.length; i < l; i++) {
+    col = document.createElement('th');
+    row.appendChild(col);
+    col.textContent = labels[i];
+  }
+
+  // body
+  body = document.createElement('tbody');
+  table.appendChild(body);
+  for (i = 0, l = this.blockInfo.length; i < l; i++) {
+    block = this.blockInfo[i];
+    ratio = (((block.compressed / block.plain) * 10000 + 0.5) >>> 0) / 100;
+    tmp = [i, block.plain, block.compressed, ratio + ' %'];
+
+    row = document.createElement('tr');
+    body.appendChild(row);
+
+    for (j = 0, m = tmp.length; j < m; j++) {
+      col = document.createElement('td');
+      row.appendChild(col);
+      col.textContent = tmp[j];
+      col.className = [
+        col.className,
+        makeCssClassName_([cssPrefix, 'number'])
+      ].join(' ');
     }
   }
 
