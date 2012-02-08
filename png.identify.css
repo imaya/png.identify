@@ -112,6 +112,9 @@ table.hextable .hextable-address {
   padding-right: 1em;
 }
 
+/*****************************************************************************
+ * Filter Count Table
+ *****************************************************************************/
 table.filtercount td,
 table.filtercount th {
   padding-left: 0.5em;
@@ -131,4 +134,25 @@ table.filtercount tbody tr:nth-child(odd) {
   background-color: #ffffff;
 }
 
+/*****************************************************************************
+ * ZLIB Block Information Table
+ *****************************************************************************/
+table.blocks thead td,
+table.blocks thead th {
+  border-bottom: 1px solid black;
+}
+
+table.blocks tbody tr:nth-child(even) {
+  background-color: #f0f0f0;
+}
+
+table.blocks tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table.blocks td,
+table.blocks th {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
 /* vim:set expandtab ts=2 sw=2: */

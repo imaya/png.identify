@@ -17,20 +17,20 @@ function setDragAndDropEvent() {
           result = document.getElementById('result'),
           option = {};
 
+      // filename
+      if (file.fileName) { option['Filename'] = file.filename; } // Chrome
+      if (file.name)     { option['Filename'] = file.name;     } // Firefox
+
       // empty
       while (result.hasChildNodes()) { result.removeChild(result.firstChild);  }
 
       // parse
       if (!PngIdentify.isPNG(data)) {
-        result.textContent = 'File "' + file.fileName + '" is not PNG file.';
+        result.textContent = 'File "' + option['Filename'] + '" is not PNG file.';
         return;
       }
       png = new PNG(data);
       identify = new PngIdentify(png);
-
-      // filename
-      if (file.fileName) { option['Filename'] = file.filename; } // Chrome
-      if (file.name)     { option['Filename'] = file.name;     } // Firefox
 
       identify.appendToElement(result, undefined, undefined, option);
     };
