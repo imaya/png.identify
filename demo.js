@@ -29,9 +29,7 @@ function setDragAndDropEvent() {
         result.textContent = 'File "' + option['Filename'] + '" is not PNG file.';
         return;
       }
-      png = new PNG(data);
-      identify = new PngIdentify(png);
-
+      identify = new PngIdentify(data);
       identify.appendToElement(result, undefined, undefined, option);
     };
 
