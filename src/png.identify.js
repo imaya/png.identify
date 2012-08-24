@@ -26,33 +26,24 @@
 
 /**
  * @fileoverview png file viewer in JavaScript.
- * require 'png.js'
- *   :( https://github.com/devongovett/png.js ).
  */
 
 goog.provide('PngIdentify');
 
-goog.require('ZlibStat');
+goog.require('ZlibStat.Inflate');
 
 goog.scope(function() {
-
-goog.exportSymbol('PngIdentify', PngIdentify);
-goog.exportSymbol('PngIdentify.isPNG', PngIdentify.isPNG);
-goog.exportSymbol(
-  'PngIdentify.prototype.appendToElement',
-  PngIdentify.prototype.appendToElement
-);
 
 /**
  * @constructor
  */
-function PngIdentify(input, cssPrefix) {
+PngIdentify = function(input, cssPrefix) {
   /** @type {!(Array.<number>|Uint8Array)} */
   this.input = input;
   /** @type {(string|undefined)} */
   this.cssPrefix = cssPrefix;
-  /** @type {!Array} */
-  this.blockInfo = [];
+  /** @type {!Array.<Object>} */
+  this.blockInfo;
   /** @type {!ZlibStat.Inflate} */
   this.zlibstat;
   /** @type {!(Array.<number>|Uint8Array)} */
@@ -74,10 +65,6 @@ function PngIdentify(input, cssPrefix) {
   /** @type {number} */
   this.interlaceMethod;
 }
-
-PngIdentify.prototype.getImageData = function() {
-  this.imageData = zlibstat.decompress();
-};
 
 /**
  * check PNG signature.
@@ -115,7 +102,7 @@ PngIdentify.prototype.getFilters = function(data) {
     return [];
   }
 
-  scanlineLength = (this.pixelBitlength / 8) * this.width;
+  scanlineLength = (this.bitDepth / 8) * this.width; // XXX pixelBitlength
   length = data.length;
 
   for (pos = 0, row = 0; pos < length; pos += scanlineLength) {
@@ -472,7 +459,8 @@ function(element, cssPrefix, className, opt_param) {
  */
 PngIdentify.prototype.updateFilterInfo = function() {
   var filters, filterCount,
-      prevFilter, filterMode = PngIdentify.BasicFilterType.UNKNOWN;
+      prevFilter, filterMode = PngIdentify.BasicFilterType.UNKNOWN,
+      i, il;
 
   // get filter information
   filters = this.getFilters(this.imageData);
@@ -480,7 +468,7 @@ PngIdentify.prototype.updateFilterInfo = function() {
 
   // filter counting
   filterCount = [];
-  for (i = 0, l = filters.length; i < l; i++) {
+  for (i = 0, il = filters.length; i < il; i++) {
     // detect mixed
     if (i === 0) {
       prevFilter = filters[i];
@@ -640,7 +628,7 @@ PngIdentify.prototype.createFilterCount_ = function(cssPrefix, className) {
  */
 PngIdentify.prototype.createBlockInfo_ = function(cssPrefix, className) {
   var table, head, body, row, col,
-      block, type, literal, lzssLength, lzssCount,
+      block, ratio, type, literal, lzssLength, lzssCount,
       labels = ['Index', 'Type', 'Plain', 'Compressed', 'Ratio', 'Literal', 'LZSS-Count', 'LZSS-Total', 'LZSS-Avg'],
       types = ['Plain', 'Fixed', 'Dynamic'],
       i, il, j, jl,
@@ -689,36 +677,35 @@ PngIdentify.prototype.createBlockInfo_ = function(cssPrefix, className) {
 
     // literal
     for (literal = 0, j = 0; j <= 255 ; ++j) {
-      literal += block.litlenCount[j];
+      literal += block['litlenCount'][j];
     }
 
     // lzss
-    lzssCount = block.lzssCode.length;
+    lzssCount = block['lzssCode'].length;
     for (lzssLength = 0, j = 0; j < lzssCount; ++j) {
-      lzssLength += block.lzssCode[j].length;
+      lzssLength += block['lzssCode'][j].length;
     }
 
-    type = block.type;
-    ratio = (block.compressed.length / block.plain.length * 10000 + 0.5 | 0) / 100;
-    tmp = [
+    type = block['type'];
+    ratio = (block['compressed'].length / block['plain'].length * 10000 + 0.5 | 0) / 100;
+
+    plainTotal += block['plain'].length;
+    compressedTotal += block['compressed'].length;
+    literalTotal += literal;
+    lzssLengthTotal += lzssLength;
+    lzssCountTotal += lzssCount;
+
+    appendRow([
       /* index          */ i,
       /* block type     */ types[type],
-      /* plain size     */ block.plain.length,
-      /* compress       */ block.compressed.length,
+      /* plain size     */ block['plain'].length,
+      /* compress       */ block['compressed'].length,
       /* compress-ratio */ ratio + ' %',
       /* literal        */ literal,
       /* lzss-count     */ lzssCount,
       /* lzss-length    */ lzssLength,
       /* lzss-average   */ (lzssLength / lzssCount * 100 + 0.5 | 0) / 100
-    ];
-
-    plainTotal += block.plain.length;
-    compressedTotal += block.compressed.length;
-    literalTotal += literal;
-    lzssLengthTotal += lzssLength;
-    lzssCountTotal += lzssCount;
-
-    appendRow(tmp);
+    ]);
   }
 
   ratio = (((compressedTotal / plainTotal) * 10000 + 0.5) | 0) / 100;
@@ -773,7 +760,8 @@ PngIdentify.prototype.createBlockHuffmanTable_ = function(block, cssPrefix, clas
       huffmanTable,
       codeCount, codeCountTotal = 0,
       bitLength, bitLengthTotal = 0,
-      labels = ['Value', 'Code', 'Count', 'Total Bits'];
+      labels = ['Value', 'Code', 'Count', 'Total Bits'],
+      i, il;
 
   if (className === void 0) { className = 'huffman-table'; }
 
@@ -813,10 +801,10 @@ PngIdentify.prototype.createBlockHuffmanTable_ = function(block, cssPrefix, clas
   // body
   body = document.createElement('tbody');
   table.appendChild(body);
-  for (i = 0, il = block.litlenHuffmanTable.length; i < il; i++) {
-    huffmanTable = block.litlenHuffmanTable[i];
+  for (i = 0, il = block['litlenHuffmanTable'].length; i < il; i++) {
+    huffmanTable = block['litlenHuffmanTable'][i];
 
-    codeCount = block.litlenCount[huffmanTable[0]];
+    codeCount = block['litlenCount'][huffmanTable[0]];
     bitLength = codeCount * huffmanTable[2];
 
     codeCountTotal += codeCount;
@@ -831,16 +819,15 @@ PngIdentify.prototype.createBlockHuffmanTable_ = function(block, cssPrefix, clas
   }
 
   appendRow([
-    /* decoded value */ '-',
+    /* decoded value */ 'Total'
     /* huffman code  */ '-',
     /* code count    */ codeCountTotal,
     /* bit length    */ bitLengthTotal
   ]);
 
   function bitstring(num, len) {
-    console.log(num, num.toString(2), len);
     // XXX
-    return ('00000000' + num.toString(2)).split('').reverse().slice(0, len).reverse().join('');
+    return ('00000000' + num.toString(2)).split('').reverse().slice(0, len).join('');
   }
 
   return table;
@@ -849,7 +836,7 @@ PngIdentify.prototype.createBlockHuffmanTable_ = function(block, cssPrefix, clas
 
 /**
  * create KeyValue viewer table
- * @param {!Object} object object.
+ * @param {!Array.<{key: *, value: *}>} array key-value object array.
  * @param {string=} cssPrefix css class prefix.
  * @param {string=} className css class name.
  * @return {!Element} table element.
@@ -979,7 +966,7 @@ function enumToResource(en) {
  * @param {!Object} object target object.
  * @return {!Object} new object.
  */
-function reverseKeyValue_(object, eachFunc) {
+function reverseKeyValue_(object) {
   var newObject = {}, keys = Object.keys(object), i, l;
 
   for (i = 0, l = keys.length; i < l; i++) {
@@ -1021,6 +1008,17 @@ function uint32ToHexString(uint32) {
          hex[uint32 >>> 12 & 0x0F] + hex[uint32 >>> 8 & 0x0F] +
          hex[uint32 >>> 4 & 0x0F] + hex[uint32 >>> 0 & 0x0F];
 }
+
+//-----------------------------------------------------------------------------
+// export
+//-----------------------------------------------------------------------------
+goog.exportSymbol('PngIdentify', PngIdentify);
+goog.exportSymbol('PngIdentify.isPNG', PngIdentify.isPNG);
+goog.exportSymbol(
+  'PngIdentify.prototype.appendToElement',
+  PngIdentify.prototype.appendToElement
+);
+
 
 
 });

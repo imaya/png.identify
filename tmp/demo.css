@@ -1,0 +1,50 @@
+body {
+  font-family: "Helvetica", "Arial",
+               "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro",
+               "メイリオ", "Meiryo", "MS PGothic", sans-serif;
+}
+
+.page-header h1 {
+  font-size: 48px;
+  margin-bottom: 0.5em;
+}
+
+header, footer, section {
+  display:block;
+}
+
+.container{
+  width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.container:before,
+.container:after{
+  display: table;
+  content: "";
+}
+
+.container:after{
+  clear: both;
+}
+
+.page-header {
+  padding-bottom: 17px;
+  margin: 18px 0px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.usage {
+  padding-bottom: 17px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.page-header h1{
+  line-height: 1;
+}
+
+table.resulttable {
+  width: 1024px;
+}
+
