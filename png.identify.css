@@ -155,4 +155,32 @@ table.blocks th {
   padding-left: 0.5em;
   padding-right: 0.5em;
 }
+
+/*****************************************************************************
+ * Huffman Code Table
+ *****************************************************************************/
+table.huffman td,
+table.huffman th {
+  vertical-align: top;
+}
+
+table.huffman-table td,
+table.huffman-table th {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+table.huffman-table thead td,
+table.huffman-table thead th {
+  border-bottom: 1px solid black;
+}
+
+table.huffman-table tbody tr:nth-child(even) {
+  background-color: #f0f0f0;
+}
+
+table.huffman-table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+
 /* vim:set expandtab ts=2 sw=2: */
