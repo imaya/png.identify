@@ -30,8 +30,6 @@ function setDragAndDropEvent() {
         return;
       }
       identify = new PngIdentify(data);
-      window.identify = identify;
-
       identify.appendToElement(result, undefined, undefined, option);
     };
 
