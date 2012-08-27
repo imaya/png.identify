@@ -108,7 +108,20 @@ PngIdentify.prototype.getFilters = function(data) {
     return [];
   }
 
-  scanlineLength = (this.bitDepth / 8) * this.width; // XXX pixelBitlength
+  scanlineLength = ((function (colourType) {
+    switch (colourType) {
+      case PngIdentify.ColourType['GRAYSCALE']:
+      case PngIdentify.ColourType['INDEXED_COLOR']:
+        return 1;
+      case PngIdentify.ColourType['GRAYSCALE_WITH_ALPHA']:
+        return 2;
+      case PngIdentify.ColourType['TRUECOLOR']:
+        return 3;
+      case PngIdentify.ColourType['TRUECOLOR_WITH_ALPHA']:
+        return 4;
+    }
+  })(this.colourType) * this.bitDepth * this.width + 7) / 8 | 0;
+
   length = data.length;
 
   for (pos = 0, row = 0; pos < length; pos += scanlineLength) {
@@ -218,7 +231,7 @@ PngIdentify.prototype.parse = function(data) {
         }
         break;
       case 'tRNS':
-        if (this.colourType === PngIdentify.ColourType.INDEXED_COLOR) {
+        if (this.colourType === PngIdentify.ColourType['INDEXED_COLOR']) {
           for (i = 0, il = chunkSize; i < il; ++i) {
             palette[i][3] = data[this.pos++];
           }
@@ -466,7 +479,7 @@ function(element, cssPrefix, className, opt_param) {
   );
 
   // filter: mixed
-  if (this.filterMode === PngIdentify.BasicFilterType.MIXED) {
+  if (this.filterMode === PngIdentify.BasicFilterType['MIXED']) {
     // filter count
     result.push(
       new KeyValue('Filter Count', this.createFilterCount_(cssPrefix))
@@ -506,7 +519,7 @@ function(element, cssPrefix, className, opt_param) {
  */
 PngIdentify.prototype.updateFilterInfo = function() {
   var filters, filterCount,
-      prevFilter, filterMode = PngIdentify.BasicFilterType.UNKNOWN,
+      prevFilter, filterMode = PngIdentify.BasicFilterType['UNKNOWN'],
       i, il;
 
   // get filter information
@@ -521,7 +534,7 @@ PngIdentify.prototype.updateFilterInfo = function() {
       prevFilter = filters[i];
     }
     if (prevFilter !== filters[i]) {
-      filterMode = PngIdentify.BasicFilterType.MIXED;
+      filterMode = PngIdentify.BasicFilterType['MIXED'];
     }
     prevFilter = filters[i];
 
@@ -531,13 +544,13 @@ PngIdentify.prototype.updateFilterInfo = function() {
 
   // filter mode
   this.filterMode = filterMode;
-  if (filterMode !== PngIdentify.BasicFilterType.MIXED && filters.length > 0) {
+  if (filterMode !== PngIdentify.BasicFilterType['MIXED'] && filters.length > 0) {
     this.filterMode = filters[0];
   }
 
   // filter count
   delete this.filterCount;
-  if (filterMode === PngIdentify.BasicFilterType.MIXED) {
+  if (filterMode === PngIdentify.BasicFilterType['MIXED']) {
     this.filterCount = filterCount;
   }
 };
@@ -720,26 +733,35 @@ PngIdentify.prototype.createBlockInfo_ = function(cssPrefix, className) {
   table.appendChild(body);
   for (i = 0, il = this.blockInfo.length; i < il; i++) {
     block = this.blockInfo[i];
-
-    // literal
-    for (literal = 0, j = 0; j <= 255 ; ++j) {
-      literal += block['litlenCount'][j];
-    }
-
-    // lzss
-    lzssCount = block['lzssCode'].length;
-    for (lzssLength = 0, j = 0; j < lzssCount; ++j) {
-      lzssLength += block['lzssCode'][j].length;
-    }
-
     type = block['type'];
     ratio = (block['compressed'].length / block['plain'].length * 10000 + 0.5 | 0) / 100;
 
     plainTotal += block['plain'].length;
     compressedTotal += block['compressed'].length;
-    literalTotal += literal;
-    lzssLengthTotal += lzssLength;
-    lzssCountTotal += lzssCount;
+
+    // plain block
+    if (type === 0) {
+      literal = 0;
+      lzssCount = 0;
+      lzssLength = 0;
+    // compressed block
+    } else {
+      // literal
+      for (literal = 0, j = 0; j <= 255 ; ++j) {
+        literal += block['litlenCount'][j];
+      }
+
+      // lzss
+      lzssCount = block['lzssCode'].length;
+      for (lzssLength = 0, j = 0; j < lzssCount; ++j) {
+        lzssLength += block['lzssCode'][j].length;
+      }
+
+      // total
+      literalTotal += literal;
+      lzssLengthTotal += lzssLength;
+      lzssCountTotal += lzssCount;
+    }
 
     appendRow([
       /* index          */ i,
@@ -855,6 +877,7 @@ PngIdentify.prototype.createBlockHuffmanTable_ = function(block, cssPrefix, clas
   // body
   body = document.createElement('tbody');
   table.appendChild(body);
+
   for (i = 0, il = block['litlenHuffmanTable'].length; i < il; i++) {
     huffmanTable = block['litlenHuffmanTable'][i];
 
