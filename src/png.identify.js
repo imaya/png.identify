@@ -31,6 +31,7 @@
 goog.provide('PngIdentify');
 
 goog.require('ZlibStat.Inflate');
+goog.require('Zlib.CRC32');
 
 goog.scope(function() {
 
@@ -132,7 +133,9 @@ PngIdentify.prototype.parse = function(data) {
   /** @type {number} */
   var pos;
   /** @type {number} */
-  var crc32;
+  var crc32a;
+  /** @type {number} */
+  var crc32b;
   /** @type {!(Array.<number>|Uint8Array)} */
   var idat;
   /** @type {number} */
@@ -177,6 +180,13 @@ PngIdentify.prototype.parse = function(data) {
       return section.join('');
     }).call(this);
 
+    // crc32-a
+    crc32a = Zlib.CRC32.calc(
+      USE_TYPEDARRAY ?
+      data.subarray(this.pos - 4, this.pos + chunkSize) :
+      data.slice(this.pos - 4, this.pos + chunkSize)
+    );
+
     // idat
     switch (section) {
       case 'IHDR':
@@ -219,16 +229,19 @@ PngIdentify.prototype.parse = function(data) {
         break;
     }
 
-    // crc32
-    crc32 = (data[this.pos++] << 24) | (data[this.pos++] << 16) |
-            (data[this.pos++] <<  8) | (data[this.pos++]      ) >>> 0;
-
-    // XXX: CRC32 検証
+    // crc32-b
+    crc32b = (
+      (data[this.pos++] << 24) | (data[this.pos++] << 16) |
+      (data[this.pos++] <<  8) | (data[this.pos++]      )
+    ) >>> 0;
 
     chunk.push({
       'type': section,
       'size': chunkSize,
-      'crc32': crc32,
+      'crc32': [
+        uint32ToHexString(crc32b),
+        'verify: ' + (crc32a === crc32b)
+      ].join(' / '),
       'position': pos
     });
 
@@ -584,7 +597,7 @@ PngIdentify.prototype.createChunkInfo_ = function(cssPrefix, className) {
       new KeyValue(chunk.type, createTableFromKeyValueArray_([
         new KeyValue('Size: ', chunk['size'] + ' Byte'),
         new KeyValue('Offset: ', chunk['position']),
-        new KeyValue('CRC32: ', uint32ToHexString(chunk['crc32']))
+        new KeyValue('CRC32: ', chunk['crc32'])
       ], cssPrefix, 'chunkinfo'))
     );
   }
