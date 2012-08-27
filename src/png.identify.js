@@ -582,9 +582,9 @@ PngIdentify.prototype.createChunkInfo_ = function(cssPrefix, className) {
     chunk = chunks[i];
     tmp.push(
       new KeyValue(chunk.type, createTableFromKeyValueArray_([
-        new KeyValue('Size: ', chunk.size + ' Byte'),
-        new KeyValue('Offset: ', chunk.position),
-        new KeyValue('CRC32: ', uint32ToHexString(chunk.crc32))
+        new KeyValue('Size: ', chunk['size'] + ' Byte'),
+        new KeyValue('Offset: ', chunk['position']),
+        new KeyValue('CRC32: ', uint32ToHexString(chunk['crc32']))
       ], cssPrefix, 'chunkinfo'))
     );
   }
