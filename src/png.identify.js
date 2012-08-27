@@ -35,6 +35,8 @@ goog.require('ZlibStat.Inflate');
 goog.scope(function() {
 
 /**
+ * @param {!(Array.<number>|Uint8Array)} input input buffer.
+ * @param {string} cssPrefix css prefix string.
  * @constructor
  */
 PngIdentify = function(input, cssPrefix) {
@@ -64,7 +66,7 @@ PngIdentify = function(input, cssPrefix) {
   this.filterMethod;
   /** @type {number} */
   this.interlaceMethod;
-}
+};
 
 /**
  * check PNG signature.
@@ -72,7 +74,10 @@ PngIdentify = function(input, cssPrefix) {
  * @return {boolean} png file: true / else: false.
  */
 PngIdentify.isPNG = function(data) {
-  var i, il;
+  /** @type {number} */
+  var i;
+  /** @type {number} */
+  var il;
 
   for (i = 0, il = PngIdentify.Signature.length; i < il; ++i) {
     if (data[i] !== PngIdentify.Signature[i]) {
@@ -118,17 +123,38 @@ PngIdentify.prototype.getFilters = function(data) {
  * parse png chunks
  */
 PngIdentify.prototype.parse = function(data) {
-  var chunk = this.chunks = [], chunkSize, section, pos, crc32;
-  var idat, idatLength = 0;
-  var idatChunk, idatChunks = [];
-  var i, il, j, jl;
+  /** @type {Array.<Object>} */
+  var chunk = this.chunks = [];
+  /** @type {number} */
+  var chunkSize;
+  /** @type {string} chunk type. */
+  var section;
+  /** @type {number} */
+  var pos;
+  /** @type {number} */
+  var crc32;
+  /** @type {!(Array.<number>|Uint8Array)} */
+  var idat;
+  /** @type {number} */
+  var idatLength = 0;
+  /** @type {!(Array.<number>|Uint8Array)} */
+  var idatChunk;
+  /** @type {Array.<!(Array.<number>|Uint8Array)>} */
+  var idatChunks = [];
+  /** @type {number} */
+  var i;
+  /** @type {number} */
+  var il;
+  /** @type {number} */
+  var j;
+  /** @type {number} */
+  var jl;
+  /** @type {Array.<Array.<number>>} */
+  var palette = this.palette = [];
 
   if (!PngIdentify.isPNG(data)) {
     throw new Error('invalid png file');
   }
-
-
-  var palette = this.palette = [];
 
   this.pos = 8;
 
@@ -239,13 +265,13 @@ PngIdentify.Signature = [137, 80, 78, 71, 13, 10, 26, 10];
  * @enum {number}
  */
 PngIdentify.BasicFilterType = {
-  UNKNOWN: -Infinity,
-  NONE: 0,
-  SUB: 1,
-  UP: 2,
-  AVERAGE: 3,
-  PAETH: 4,
-  MIXED: -1
+  'UNKNOWN': -Infinity,
+  'NONE': 0,
+  'SUB': 1,
+  'UP': 2,
+  'UPAVERAGE': 3,
+  'PAETH': 4,
+  'MIXED': -1
 };
 
 /**
@@ -253,8 +279,8 @@ PngIdentify.BasicFilterType = {
  * @enum {number}
  */
 PngIdentify.CompressionFlag = {
-  UNCOMPRESSED: 0,
-  COMPRESSED: 1
+  'UNCOMPRESSED': 0,
+  'COMPRESSED': 1
 };
 
 /**
@@ -263,7 +289,7 @@ PngIdentify.CompressionFlag = {
  * @enum {number}
  */
 PngIdentify.CompressionMethod = {
-  DEFLATE: 0
+  'DEFLATE': 0
 };
 
 /**
@@ -274,11 +300,11 @@ PngIdentify.CompressionMethod = {
  * @enum {number}
  */
 PngIdentify.ColourType = {
-  GRAYSCALE: 0,
-  TRUECOLOR: 2,
-  INDEXED_COLOR: 3,
-  GRAYSCALE_WITH_ALPHA: 4,
-  TRUECOLOR_WITH_ALPHA: 6
+  'GRAYSCALE': 0,
+  'TRUECOLOR': 2,
+  'INDEXED_COLOR': 3,
+  'GRAYSCALE_WITH_ALPHA': 4,
+  'TRUECOLOR_WITH_ALPHA': 6
 };
 
 /**
@@ -287,17 +313,16 @@ PngIdentify.ColourType = {
  * @enum {number}
  */
 PngIdentify.FilterMethod = {
-  BASIC: 0
+  'BASIC': 0
 };
-
 
 /**
  * インタレース方法
  * @enum {number}
  */
 PngIdentify.InterlaceMethod = {
-  NONE: 0,
-  ADAM7: 1
+  'NONE': 0,
+  'ADAM7': 1
 };
 
 /**
@@ -305,10 +330,10 @@ PngIdentify.InterlaceMethod = {
  * @enum {number}
  */
 PngIdentify.RenderingIntent = {
-  PERCEPTUAL: 0,
-  RELATIVE: 1,
-  SATURATION: 2,
-  ABSOLUTE: 3
+  'PERCEPTUAL': 0,
+  'RELATIVE': 1,
+  'SATURATION': 2,
+  'ABSOLUTE': 3
 };
 
 /**
@@ -316,8 +341,8 @@ PngIdentify.RenderingIntent = {
  * @enum {number}
  */
 PngIdentify.UnitSpecifier = {
-  UNKNOWN: 0,
-  METRE: 1
+  'UNKNOWN': 0,
+  'METRE': 1
 };
 
 /**
@@ -341,7 +366,9 @@ PngIdentify.Resource = {
  * @constructor
  */
 function KeyValue(key, value) {
+  /** @type {*} */
   this.key = key;
+  /** @type {*} */
   this.value = value;
 }
 
@@ -354,9 +381,16 @@ function KeyValue(key, value) {
  */
 PngIdentify.prototype.appendToElement =
 function(element, cssPrefix, className, opt_param) {
-  var result = [],
-      rc = PngIdentify.Resource,
-      keys, i, l;
+  /** @type {Array.<KeyValue>} */
+  var result = [];
+  /** @type {*} */
+  var rc = PngIdentify.Resource;
+  /** @type {Array.<string>} */
+  var keys;
+  /** @type {number} */
+  var i;
+  /** @type {number} */
+  var l;
 
   if (className === void 0) {
     className = 'resulttable';
@@ -494,7 +528,6 @@ PngIdentify.prototype.updateFilterInfo = function() {
     this.filterCount = filterCount;
   }
 };
-
 
 /**
  * create palette table.
@@ -724,6 +757,7 @@ PngIdentify.prototype.createBlockInfo_ = function(cssPrefix, className) {
   return table;
 };
 
+
 /**
  * create zlib block information table.
  * @param {string=} cssPrefix css class name prefix.
@@ -751,10 +785,17 @@ PngIdentify.prototype.createBlockInfoHuffman_ = function(cssPrefix, className) {
     });
   }
 
-
   return createTableFromKeyValueArray_(array, cssPrefix, className);
 };
 
+/**
+ * create zlib huffman table.
+ * @param {Object} block zlib block object.
+ * @param {string=} cssPrefix css class name prefix.
+ * @param {string=} className css class name.
+ * @return {!Element} table element.
+ * @private
+ */
 PngIdentify.prototype.createBlockHuffmanTable_ = function(block, cssPrefix, className) {
   var table, head, body, row, col,
       huffmanTable,
@@ -819,20 +860,20 @@ PngIdentify.prototype.createBlockHuffmanTable_ = function(block, cssPrefix, clas
   }
 
   appendRow([
-    /* decoded value */ 'Total'
+    /* decoded value */ 'Total',
     /* huffman code  */ '-',
     /* code count    */ codeCountTotal,
     /* bit length    */ bitLengthTotal
   ]);
 
   function bitstring(num, len) {
-    // XXX
-    return ('00000000' + num.toString(2)).split('').reverse().slice(0, len).join('');
+    return (
+      '0000000000000000' + num.toString(2)
+    ).split('').reverse().slice(0, len).join('');
   }
 
   return table;
 };
-
 
 /**
  * create KeyValue viewer table
@@ -883,7 +924,6 @@ function createTableFromKeyValueArray_(array, cssPrefix, className) {
 
   return table;
 }
-
 
 /**
  * create hex viewer table
@@ -967,9 +1007,16 @@ function enumToResource(en) {
  * @return {!Object} new object.
  */
 function reverseKeyValue_(object) {
-  var newObject = {}, keys = Object.keys(object), i, l;
+  /** @type {!Object} */
+  var newObject = {};
+  /** @type {Array.<string>} */
+  var keys = Object.keys(object);
+  /** @type {number} */
+  var i;
+  /** @type {number} */
+  var il;
 
-  for (i = 0, l = keys.length; i < l; i++) {
+  for (i = 0, il = keys.length; i < il; i++) {
     newObject[object[keys[i]]] = keys[i];
   }
 
@@ -978,14 +1025,19 @@ function reverseKeyValue_(object) {
 
 /**
  * make CSS class name.
- * @param {!Array} array source array.
+ * @param {!Array.<string>} array source array.
  * @return {!string} CSS class name.
  * @private
  */
 function makeCssClassName_(array) {
-  var words = [], i, l;
+  /** @type {Array.<string>} */
+  var words = [];
+  /** @type {number} */
+  var i;
+  /** @type {number} */
+  var il;
 
-  for (i = 0, l = array.length; i < l; i++) {
+  for (i = 0, il = array.length; i < il; i++) {
     if (array[i] === void 0) {
       continue;
     }
@@ -1001,6 +1053,7 @@ function makeCssClassName_(array) {
  * @return {string} hex string.
  */
 function uint32ToHexString(uint32) {
+  /** @type {string} */
   var hex = '0123456689ABCDEF';
 
   return hex[uint32 >>> 28 & 0x0F] + hex[uint32 >>> 24 & 0x0F] +
@@ -1018,7 +1071,6 @@ goog.exportSymbol(
   'PngIdentify.prototype.appendToElement',
   PngIdentify.prototype.appendToElement
 );
-
 
 
 });
