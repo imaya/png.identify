@@ -62,11 +62,13 @@ PngIdentify = function(input, cssPrefix) {
   /** @type {number} */
   this.colourType;
   /** @type {number} */
-  this.compressionMethoda;
+  this.compressionMethod;
   /** @type {number} */
   this.filterMethod;
   /** @type {number} */
   this.interlaceMethod;
+  /** @type {!(Array.<number>|Uint8Array)} */
+  this.histogram;
 };
 
 /**
@@ -167,6 +169,10 @@ PngIdentify.prototype.parse = function(data) {
   var jl;
   /** @type {Array.<Array.<number>>} */
   var palette = this.palette = [];
+  /** @type {!(Array.<number>|Uint8Array)} */
+  var histogram;
+  /** @type {number} */
+  var histogramTotal;
 
   if (!PngIdentify.isPNG(data)) {
     throw new Error('invalid png file');
@@ -275,6 +281,25 @@ PngIdentify.prototype.parse = function(data) {
   // decompress image data
   this.imageData = (this.zlibstat = new ZlibStat.Inflate(idat)).decompress();
   this.blockInfo = this.zlibstat.getBlocks();
+
+  // color histogram
+  if (this.colourType === PngIdentify.ColourType.INDEXED_COLOR) {
+    histogramTotal = 0;
+    idat = this.imageData;
+    histogram = this.histogram =
+      new (USE_TYPEDARRAY ? Uint32Array : Array)(palette.length);
+    if (USE_TYPEDARRAY) {
+      for (i = 0, il = idat.length; i < il; ++i) {
+        ++histogram[idat[i]];
+        ++histogramTotal;
+      }
+    } else {
+      for (i = 0, il = idat.length; i < il; ++i) {
+        histogram[idat[i]] = (histogram[idat[i]] | 0) + 1;
+        ++histogramTotal;
+      }
+    }
+  }
 
   return chunk;
 };
@@ -563,31 +588,74 @@ PngIdentify.prototype.updateFilterInfo = function() {
  * @private
  */
 PngIdentify.prototype.createPalette_ = function(cssPrefix, className) {
+  var table, head, body, row, col;
   var palette = this.palette,
       keyValueArray = [],
-      i, l,
+      i, il,
       color, sample;
+  var labels = ['Index', 'Color', 'Count', 'Ratio'];
 
   if (className === void 0) {
     className = 'plte';
   }
 
-  for (i = 0, l = palette.length; i < l; i++) {
+  // table
+  table = document.createElement('table');
+  table.className = makeCssClassName_([cssPrefix, className]);
+
+  // head
+  head = document.createElement('thead');
+  table.appendChild(head);
+  row = document.createElement('tr');
+  head.appendChild(row);
+  for (i = 0, il = labels.length; i < il; i++) {
+    col = document.createElement('th');
+    row.appendChild(col);
+    col.textContent = labels[i];
+  }
+
+  // body
+  body = document.createElement('tbody');
+  table.appendChild(body);
+  for (i = 0, il = palette.length; i < il; i++) {
     color = palette[i];
     sample = 'rgb(' + color.slice(0, 3).join(', ') + ')';
     sample =
       '<span style="padding-left:1em;background-color:' + sample + ';">' +
       '&nbsp;' +
       '</span>';
-    keyValueArray.push(
-      new KeyValue(
-        i,
-        [sample, 'rgba(' + color.join(', ') + ')'].join(' ')
-      )
-    );
+    appendRow([
+      i,
+      [
+        sample,
+        'rgba(' + color.join(', ') + ')'
+      ].join(' '),
+      this.histogram[i],
+      ((this.histogram[i] / (this.width * this.height) * 10000 + 0.5 | 0) / 100) + '%'
+    ]);
   }
 
-  return createTableFromKeyValueArray_(keyValueArray, cssPrefix, className);
+  // row
+  function appendRow(rowData) {
+    var i, il;
+
+    row = document.createElement('tr');
+    body.appendChild(row);
+
+    for (i = 0, il = rowData.length; i < il; i++) {
+      col = document.createElement('td');
+      row.appendChild(col);
+      col.innerHTML = rowData[i];
+      if (i !== 1) {
+        col.className = [
+          col.className,
+          makeCssClassName_([cssPrefix, 'number'])
+        ].join(' ');
+      }
+    }
+  }
+
+  return table;
 };
 
 /**

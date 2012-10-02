@@ -137,6 +137,28 @@ table.filtercount tbody tr:nth-child(odd) {
 /*****************************************************************************
  * ZLIB Block Information Table
  *****************************************************************************/
+table.plte thead td,
+table.plte thead th {
+    border-bottom: 1px solid black;
+}
+
+table.plte tbody tr:nth-child(even) {
+    background-color: #f0f0f0;
+}
+
+table.plte tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+table.plte td,
+table.plte th {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+/*****************************************************************************
+ * ZLIB Block Information Table
+ *****************************************************************************/
 table.blocks thead td,
 table.blocks thead th {
   border-bottom: 1px solid black;
