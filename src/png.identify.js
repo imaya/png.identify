@@ -283,6 +283,8 @@ PngIdentify.prototype.parse = function(data) {
   this.blockInfo = this.zlibstat.getBlocks();
 
   // color histogram
+  /*
+  TODO: bit depth とフィルタを考慮したデコードを行っていないため凍結
   if (this.colourType === PngIdentify.ColourType.INDEXED_COLOR) {
     histogramTotal = 0;
     idat = this.imageData;
@@ -300,6 +302,7 @@ PngIdentify.prototype.parse = function(data) {
       }
     }
   }
+  */
 
   return chunk;
 };
@@ -514,7 +517,7 @@ function(element, cssPrefix, className, opt_param) {
     result.push(
       new KeyValue(
         'Filters',
-        createTableFromByteArray_(this.filters, cssPrefix)
+        createTableFromByteArray_(this.filters, cssPrefix, void 0, 'Line')
       )
     );
   }
@@ -629,9 +632,11 @@ PngIdentify.prototype.createPalette_ = function(cssPrefix, className) {
       [
         sample,
         'rgba(' + color.join(', ') + ')'
-      ].join(' '),
+      ].join(' ')
+      /*,
       this.histogram[i],
       ((this.histogram[i] / (this.width * this.height) * 10000 + 0.5 | 0) / 100) + '%'
+      */
     ]);
   }
 
@@ -1034,10 +1039,11 @@ function createTableFromKeyValueArray_(array, cssPrefix, className) {
  * @param {!Array} array byte array.
  * @param {string=} cssPrefix css class name prefix.
  * @param {string=} className css class name.
+ * @param {string=} label table label.
  * @return {!Element} table element.
  * @private
  */
-function createTableFromByteArray_(array, cssPrefix, className) {
+function createTableFromByteArray_(array, cssPrefix, className, label) {
   var table = document.createElement('table'),
       head = document.createElement('thead'),
       body = document.createElement('tbody'),
@@ -1054,7 +1060,7 @@ function createTableFromByteArray_(array, cssPrefix, className) {
   // head
   row = document.createElement('tr');
   col = document.createElement('td');
-  col.textContent = 'Address';
+  col.textContent = label || 'Address';
   row.appendChild(col);
   for (x = 0; x < 16; x++) {
     col = document.createElement('td');
