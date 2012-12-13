@@ -596,7 +596,7 @@ PngIdentify.prototype.createPalette_ = function(cssPrefix, className) {
       keyValueArray = [],
       i, il,
       color, sample;
-  var labels = ['Index', 'Color', 'Count', 'Ratio'];
+  var labels = ['Index', 'Color'];
 
   if (className === void 0) {
     className = 'plte';
